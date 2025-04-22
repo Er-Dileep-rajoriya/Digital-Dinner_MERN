@@ -3,8 +3,8 @@ import { useForm } from "react-hook-form";
 import axios from "axios";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import { useDispatch, useSelector } from "react-redux";
-import { setLoggedInUser } from "@/redux/slice/userSlice";
+import { useSelector } from "react-redux";
+
 import { useNavigate } from "react-router-dom";
 import { AiOutlineUser, AiOutlineMail, AiOutlineLock } from "react-icons/ai";
 import { FiEye, FiEyeOff } from "react-icons/fi";
@@ -26,7 +26,6 @@ function Signup() {
   } = useForm<FormData>();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const { loggedInUser } = useSelector((store: RootState) => store.userReducer);
 
@@ -43,7 +42,6 @@ function Signup() {
       const response = await axios.post(`${apiUrl}/user/signup`, data);
 
       if (response.data?.success) {
-        dispatch(setLoggedInUser(response?.data?.user));
         toast.success(response.data?.message);
         navigate("/login");
       }

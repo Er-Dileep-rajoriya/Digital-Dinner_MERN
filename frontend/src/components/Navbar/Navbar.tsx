@@ -9,6 +9,7 @@ import { RootState } from "@/redux/store";
 import { clearLoggedInUser } from "@/redux/slice/userSlice";
 import { toast } from "sonner";
 import axios from "axios";
+import { clearCart } from "@/redux/slice/cartSlice";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -25,6 +26,7 @@ const Navbar = () => {
       const res = await axios.get(`${apiUrl}/user/logout`);
       if (res?.data?.success) {
         dispatch(clearLoggedInUser());
+        dispatch(clearCart());
         toast.success(res?.data?.message);
       }
     } catch (error: any) {
