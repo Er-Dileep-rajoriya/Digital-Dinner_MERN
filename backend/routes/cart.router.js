@@ -5,6 +5,7 @@ import {
   increaseQuantity,
   decreaseQuantity,
   getCartItemsByUser,
+  removeAllCartItems,
 } from "../controllers/cart.controller.js";
 
 const cartRouter = express.Router();
@@ -14,5 +15,6 @@ cartRouter.get("/", getCartItemsByUser);
 cartRouter.post("/:id", removeFromCart);
 cartRouter.patch("/inc/:id", increaseQuantity);
 cartRouter.patch("/dec/:id", decreaseQuantity);
+cartRouter.delete('/clear', removeAllCartItems);
 
 export default cartRouter;

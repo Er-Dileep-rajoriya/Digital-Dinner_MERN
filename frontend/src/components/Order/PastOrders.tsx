@@ -1,28 +1,30 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import { useEffect, useState } from "react";
+import axios, { AxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 import Loading from "@/components/Loading";
 import { toast } from "sonner";
+import { OrderType } from "@/types/type";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
-const PastOrders = () => {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+const PastOrders: React.FC = () => {
+  const [orders, setOrders] = useState<OrderType[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const navigate = useNavigate();
 
   const fetchOrders = async () => {
     try {
-      const res = await axios.post(
+      const res = await axios.post<{ orders: OrderType[] }>(
         `${apiUrl}/items/order/history`,
         {},
         {
           withCredentials: true,
         }
       );
-      setOrders(res.data?.orders);
-    } catch (err) {
-      toast.error("Failed to load past orders");
+      setOrders(res.data.orders);
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message?: string }>;
+      toast.error(error.response?.data?.message || "Failed to load past orders");
     } finally {
       setLoading(false);
     }
@@ -43,8 +45,7 @@ const PastOrders = () => {
       {orders.length === 0 ? (
         <p className="text-gray-500">No orders found.</p>
       ) : (
-        orders &&
-        orders?.map((order) => (
+        orders.map((order) => (
           <div
             key={order.id}
             className="mb-6 p-4 border rounded shadow bg-white dark:bg-zinc-900"

@@ -152,12 +152,49 @@ export const getCartItemsByUser = async (req, res) => {
       return res.status(404).json({ message: "No items found in the cart" });
     }
 
+    const formattedItems = cartItems.map((cartItem) => ({
+      _id: cartItem.itemId._id,
+      title: cartItem.itemId.title,
+      category: cartItem.itemId.category,
+      description: cartItem.itemId.description,
+      price: cartItem.itemId.price,
+      imageUrl: cartItem.itemId.imageUrl,
+      quantity: cartItem.quantity
+    }));
+
     return res.status(200).json({
       message: "Cart items fetched successfully",
-      cartItems,
+      cartItems : formattedItems,
     });
   } catch (error) {
     console.error("Error fetching cart items:", error);
     return res.status(500).json({ message: "Server error" });
   }
 };
+
+
+// api to remove all cart items
+export const removeAllCartItems = async (req, res) => {
+  const userId = req.userId;
+
+  if (!userId) {
+    return res.status(400).json({ message: "Missing userId field" });
+  }
+  try {
+    const cartItems = await Cart.find({ userId });
+
+    if (!cartItems || cartItems.length === 0) {
+      return res.status(404).json({ message: "No cart items found" });
+    }
+
+    await Cart.deleteMany({ userId });
+
+    return res
+      .status(200)
+      .json({ message: "All items removed from cart successfully" });
+  } catch (error) {
+    console.error("Error removing all cart items:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+

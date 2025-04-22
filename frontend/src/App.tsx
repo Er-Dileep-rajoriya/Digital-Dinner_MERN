@@ -11,6 +11,7 @@ import Login from "./components/Login/Login.tsx";
 import Signup from "./components/Signup/Signup.tsx";
 import PlaceOrder from "./components/Order/PlaceOrder.tsx";
 import PastOrders from "./components/Order/PastOrders.tsx";
+import ConfirmationPage from "./components/Order/ConfirmationPage.tsx";
 
 const router = createBrowserRouter([
   {
@@ -41,6 +42,10 @@ const router = createBrowserRouter([
         path: "items/order/history",
         element: <PastOrders />,
       },
+      {
+        path : 'items/order/confirm',
+        element : <ConfirmationPage />
+      }
     ],
   },
 ]);

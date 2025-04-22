@@ -1,23 +1,28 @@
-import {
-  removeFromCart,
-  updateCartItemQuantity,
-} from "@/redux/slice/cartSlice";
-import { RootState } from "@/redux/store";
-import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import Loading from "../Loading";
 
+import { removeFromCart, updateCartItemQuantity } from "@/redux/slice/cartSlice";
+import { RootState } from "@/redux/store";
+import { CartItemType } from "@/types/type";
+import Loading from "../Loading";
+import { setCartItems } from "@/redux/slice/cartSlice";
+
+// API base URL
 const apiUrl = import.meta.env.VITE_API_URL;
 
-const Cart = () => {
+const Cart: React.FC = () => {
   const { cartItems } = useSelector((store: RootState) => store.cartReducer);
   const { loggedInUser } = useSelector((store: RootState) => store.userReducer);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
+
+
+
+  // fetch all cart items from this api -> GET METHOD - apiUrl/cart and set to the redux also
 
   // Redirect if not logged in
   useEffect(() => {
@@ -26,22 +31,36 @@ const Cart = () => {
     }
   }, [loggedInUser, navigate]);
 
-  // Simulate loading delay (can be replaced with actual API call)
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 500); // simulate loading
-    return () => clearTimeout(timer);
-  }, []);
+    const fetchCartItems = async () => {
+      try {
+        const res = await axios.get(`${apiUrl}/cart`, {
+          withCredentials: true,
+        });
+  
+        if (res.status === 200) {
+          dispatch(setCartItems(res.data?.cartItems));
+        }
+      } catch (err: unknown) {
+        const error = err as AxiosError<{ message?: string }>;
+        console.error(error);
+        toast.error(error.response?.data?.message || "Failed to load cart");
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    if (loggedInUser) {
+      fetchCartItems();
+    }
+  }, [loggedInUser, dispatch]);
+  
 
-  const calculateTotal = () => {
-    return cartItems.reduce(
-      (total, item) => total + item.price * item.quantity,
-      0
-    );
+  const calculateTotal = (): number => {
+    return cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
   };
 
-  const handleRemoveFromCart = async (item: any) => {
+  const handleRemoveFromCart = async (item: CartItemType): Promise<void> => {
     const itemId = item._id;
     try {
       const res = await axios.post(
@@ -54,13 +73,18 @@ const Cart = () => {
         dispatch(removeFromCart(itemId));
         toast.success(res.data?.message || "Item removed from cart");
       }
-    } catch (err: any) {
-      console.error(err);
-      toast.error(err?.response?.data?.message || "Failed to remove item");
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message?: string }>;
+    
+      console.error(error);
+    
+      toast.error(
+        error.response?.data?.message || "Failed to remove item"
+      );
     }
   };
 
-  const increaseQuantity = async (id: string, currentQty: number) => {
+  const increaseQuantity = async (id: string, currentQty: number): Promise<void> => {
     try {
       const res = await axios.patch(
         `${apiUrl}/cart/inc/${id}`,
@@ -72,15 +96,18 @@ const Cart = () => {
         dispatch(updateCartItemQuantity({ id, quantity: currentQty + 1 }));
         toast.success("Increased quantity");
       }
-    } catch (err: any) {
-      console.error(err);
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message?: string }>;
+    
+      console.error(error);
+    
       toast.error(
-        err?.response?.data?.message || "Failed to increase quantity"
+        error.response?.data?.message || "Failed with response"
       );
     }
   };
 
-  const decreaseQuantity = async (id: string, currentQty: number) => {
+  const decreaseQuantity = async (id: string, currentQty: number): Promise<void> => {
     if (currentQty <= 1) return;
     try {
       const res = await axios.patch(
@@ -93,10 +120,13 @@ const Cart = () => {
         dispatch(updateCartItemQuantity({ id, quantity: currentQty - 1 }));
         toast.success("Decreased quantity");
       }
-    } catch (err: any) {
-      console.error(err);
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message?: string }>;
+    
+      console.error(error);
+    
       toast.error(
-        err?.response?.data?.message || "Failed to decrease quantity"
+        error.response?.data?.message || "Failed to Decrease Quantity."
       );
     }
   };
@@ -123,35 +153,18 @@ const Cart = () => {
         <table className="min-w-full table-auto border-collapse">
           <thead className="bg-gray-200 dark:bg-zinc-800">
             <tr>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Item
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Price
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Quantity
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Total
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Actions
-              </th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Item</th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Price</th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Quantity</th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Total</th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Actions</th>
             </tr>
           </thead>
           <tbody>
             {cartItems.map((item) => (
-              <tr
-                key={item._id}
-                className="border-b hover:bg-gray-50 dark:hover:bg-zinc-800"
-              >
-                <td className="px-4 py-4 text-sm text-gray-900 dark:text-gray-100">
-                  {item.title}
-                </td>
-                <td className="px-4 py-4 text-sm text-gray-900 dark:text-gray-100">
-                  ₹{item.price}
-                </td>
+              <tr key={item._id} className="border-b hover:bg-gray-50 dark:hover:bg-zinc-800">
+                <td className="px-4 py-4 text-sm text-gray-900 dark:text-gray-100">{item.title}</td>
+                <td className="px-4 py-4 text-sm text-gray-900 dark:text-gray-100">₹{item.price}</td>
                 <td className="px-4 py-4 text-sm text-gray-900 dark:text-gray-100">
                   <div className="flex items-center">
                     <button
@@ -169,9 +182,7 @@ const Cart = () => {
                     </button>
                   </div>
                 </td>
-                <td className="px-4 py-4 text-sm text-gray-900 dark:text-gray-100">
-                  ₹{item.price * item.quantity}
-                </td>
+                <td className="px-4 py-4 text-sm text-gray-900 dark:text-gray-100">₹{item.price * item.quantity}</td>
                 <td className="px-4 py-4 text-sm text-red-600 dark:text-red-500">
                   <button
                     onClick={() => handleRemoveFromCart(item)}
@@ -188,9 +199,7 @@ const Cart = () => {
 
       <div className="flex justify-between items-center mt-6">
         <span className="text-xl font-semibold">Total:</span>
-        <span className="text-2xl text-green-600 font-bold">
-          ₹{calculateTotal()}
-        </span>
+        <span className="text-2xl text-green-600 font-bold">₹{calculateTotal()}</span>
       </div>
 
       <div className="flex justify-center mt-6">

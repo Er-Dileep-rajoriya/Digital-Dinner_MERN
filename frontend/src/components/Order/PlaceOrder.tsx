@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
 import Loading from "@/components/Loading";
 import { clearCart } from "@/redux/slice/cartSlice";
@@ -21,21 +21,16 @@ const PlaceOrder = () => {
     0
   );
 
-  //   useEffect(() => {
-  //     if (cartItems.length === 0) {
-  //       navigate("/cart");
-  //     }
-  //   }, [cartItems, navigate]);
 
   const handleOrder = async () => {
     if (!phoneNumber || phoneNumber.length < 10) {
       toast.error("Please enter a valid phone number");
       return;
     }
-
     setLoading(true);
-
+  
     try {
+      // Place the order
       const res = await axios.post(
         `${apiUrl}/items/order`,
         {
@@ -45,22 +40,32 @@ const PlaceOrder = () => {
         },
         { withCredentials: true }
       );
-
+  
+      // Only clear cart if order placement is successful
       if (res.status === 201) {
-        dispatch(clearCart());
-        navigate("/items/order/history");
+        // Clear backend cart
+        const res2 = await axios.delete(`${apiUrl}/cart/clear`, {
+          withCredentials: true,
+        });
+  
+        if (res2.status === 200) {
+          dispatch(clearCart()); // Clear local Redux cart
+        } else {
+          console.warn("Cart not cleared on backend");
+        }
+  
+        navigate("/items/order/confirm");
         toast.success("Order placed successfully!");
       }
-    } catch (error: any) {
-      console.error(error);
-      toast.error(
-        error?.response?.data?.message || "Failed to place the order"
-      );
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message?: string }>;
+      console.error("Order placement error:", error);
+      toast.error(error?.response?.data?.message || "Failed to place the order");
     } finally {
       setLoading(false);
     }
   };
-
+  
   if (loading) return <Loading />;
 
   return (
