@@ -146,6 +146,9 @@ export const getCartItemsByUser = async (req, res) => {
   }
 
   try {
+
+    
+
     const cartItems = await Cart.find({ userId }).populate("itemId");
 
     if (!cartItems || cartItems.length === 0) {

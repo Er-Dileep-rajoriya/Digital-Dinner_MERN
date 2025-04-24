@@ -1,7 +1,21 @@
+import { redisClient } from "../lib/redis.config.js";
 import { Menu } from "../models/menu.model.js";
 // get all menu items
 export const getMenuItems = async (req, res) => {
   try {
+
+    // check in caching of redis
+    const dataPresent = await redisClient.get('Items');
+
+    if(dataPresent)
+    {
+      return res.status(200).json({
+        success: true,
+        Items: JSON.parse(dataPresent),
+      });
+    }
+
+
     const menuItems = await Menu.find();
 
     if (!menuItems || menuItems.length <= 0) {
@@ -10,6 +24,10 @@ export const getMenuItems = async (req, res) => {
         message: "Items Not Found",
       });
     }
+
+    // set items to redis for future caching
+    await redisClient.set('Items', JSON.stringify(menuItems));
+    await redisClient.expire('Items', 5000);
 
     return res.status(200).json({
       success: true,
