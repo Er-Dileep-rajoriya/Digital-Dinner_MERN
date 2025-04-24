@@ -17,7 +17,7 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL,
+    origin: [process.env.FRONTEND_URL, "https://digital-dinner-mern.vercel.app"],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
   })
