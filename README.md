@@ -13,7 +13,7 @@
 
 ## Live Demo
 
-You can view the deployed application here: [Digital Diner - Live Demo](https://digital-dinner-mern.vercel.app)
+You can view the deployed application here: [Digital Diner - Live Demo](https://digital-dinner-mern-fvscpyb9x-dileep-rajoriyas-projects.vercel.app)
 
 ## Features
 
